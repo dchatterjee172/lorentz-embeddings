@@ -162,8 +162,9 @@ def insert(q, d):
     pairs = list()
     q_nodes = np.arange(0, q)
     d_nodes = np.arange(q, q + d)
-    for i in q_nodes:
-        for j in np.random.permutation(d_nodes)[:10]:
+    for i in d_nodes:
+        for j in np.random.permutation(q_nodes)[: np.random.randint(1, 3)]:
+            # randomly connect to questions
             pairs.append((j, i))
     return pairs
 
@@ -185,8 +186,8 @@ def dikhaao(table, num_q, pairs, loss, epoch):
 
 if __name__ == "__main__":
     emb_dim = 2
-    num_q = 100
-    num_d = 30
+    num_q = 20
+    num_d = num_q * 17
     net = Lorentz(
         num_q + num_d, emb_dim + 1
     )  # as the paper follows R^(n+1) for this space
@@ -197,17 +198,17 @@ if __name__ == "__main__":
     print(pairs)
     I = []
     Ks = []
-    arange = np.arange(0, num_q)
+    arange = np.arange(num_q, num_q + num_d)
     for x, y in pairs:
-        I.append(x)
-        temp_Ks = [y]  # keep the parent in the begining
+        I.append(x)  # question
+        temp_Ks = [y]  # connected documented
         temp = np.random.permutation(arange)
         for _ in temp:
             if (x, _) not in pairs and _ != x:
-                # make sure there is not edge between _ -> x
+                # make sure there is not edge between x -> _
                 temp_Ks.append(_)
             if (
-                len(temp_Ks) == 5
+                len(temp_Ks) == 3
             ):  # sample size of 5, the minimum value of this will depend on num_nodes
                 break
         Ks.append(temp_Ks)
