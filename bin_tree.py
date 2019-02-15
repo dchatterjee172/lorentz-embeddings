@@ -7,10 +7,11 @@ from torch import nn
 from torch import optim
 import matplotlib
 from tqdm import tqdm
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-plt.style.use('ggplot')
+plt.style.use("ggplot")
 
 
 def arcosh(x):
@@ -178,14 +179,14 @@ def dikhaao(table, loss, epoch):
     n_nodes = len(table)
     plt.figure(figsize=(10, 7))
     while sum([1 for layer in layers for node in layer]) < n_nodes:
-        limit = 2**len(layers)
+        limit = 2 ** len(layers)
         layers.append(table[:limit])
         table = table[limit:]
-        plt.scatter(*zip(*layers[-1]), label=f'Layer {len(layers) - 1}')
-    plt.title(f'{epoch}: N Nodes {n_nodes} Loss {float(loss)}')
+        plt.scatter(*zip(*layers[-1]), label=f"Layer {len(layers) - 1}")
+    plt.title(f"{epoch}: N Nodes {n_nodes} Loss {float(loss)}")
     plt.legend()
-    images = list(os.listdir('images'))
-    plt.savefig(f'images/{len(images)}.svg')
+    images = list(os.listdir("images"))
+    plt.savefig(f"images/{len(images)}.svg")
     plt.close()
 
 
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     I = torch.tensor(I)
     Ks = torch.tensor(Ks)
     batch_size = 1000
-    epochs = 40_00_00_000
+    epochs = 400_000_000
     with tqdm(total=epochs) as pbar:
         for epoch in range(epochs):
             loss = 0
@@ -236,8 +237,8 @@ if __name__ == "__main__":
                 r.step()
             if epoch % 10 == 0:
                 dikhaao(table, loss, epoch)
-            pbar.set_description(f'{epoch}  :   {float(loss)}')
+            pbar.set_description(f"{epoch}  :   {float(loss)}")
             pbar.update(1)
             if torch.isnan(loss) or torch.isinf(loss):
-                print('NAN / Inf')
+                print("NAN / Inf")
                 break
