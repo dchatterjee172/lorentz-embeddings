@@ -2,16 +2,19 @@ Lorentz Embeddings
 ==================
 
 
-A pytorch implementation of [Learning Continuous Hierarchies in the Lorentz Model of Hyperbolic Geometry](https://arxiv.org/pdf/1806.03417.pdf?noredirect=1).
-
 Usage
 =====
 
-Binary tree embedding and visualization.
+marco style QA embedding and visualization.        
+```
+D1<-Q1->D2<-Q2->D3
+^    >---^
+|  /
+Q6
+```
 
 ```bash
 mkdir images
-python bin_tree.py
+python marco.py
 ```
 
-The final embedding for a binary tree in 2 dim. ![Final Embedding](final_binary_tree.svg)
