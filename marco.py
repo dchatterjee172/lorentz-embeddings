@@ -183,8 +183,8 @@ def dikhaao(table, num_q, loss, epoch):
 
 if __name__ == "__main__":
     emb_dim = 2
-    num_q = 50
-    num_d = 50
+    num_q = 100
+    num_d = 40
     net = Lorentz(
         num_q + num_d, emb_dim + 1
     )  # as the paper follows R^(n+1) for this space
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     print(pairs)
     I = []
     Ks = []
-    arange = np.arange(num_q, num_q + num_d)
+    arange = np.arange(0, num_q)
     for x, y in pairs:
         I.append(x)
         temp_Ks = [y]  # keep the parent in the begining
