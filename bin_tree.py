@@ -1,9 +1,16 @@
+import os
+import io
 import torch
 import random
 import numpy as np
 from torch import nn
 from torch import optim
+import matplotlib
+from tqdm import tqdm
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+plt.style.use('ggplot')
 
 
 def arcosh(x):
@@ -165,9 +172,26 @@ def insert(n):
     return pairs
 
 
+def dikhaao(table, loss, epoch):
+    table = lorentz_to_poincare(table)
+    layers = []
+    n_nodes = len(table)
+    plt.figure(figsize=(10, 7))
+    while sum([1 for layer in layers for node in layer]) < n_nodes:
+        limit = 2**len(layers)
+        layers.append(table[:limit])
+        table = table[limit:]
+        plt.scatter(*zip(*layers[-1]), label=f'Layer {len(layers) - 1}')
+    plt.title(f'{epoch}: N Nodes {n_nodes} Loss {float(loss)}')
+    plt.legend()
+    images = list(os.listdir('images'))
+    plt.savefig(f'images/{len(images)}.svg')
+    plt.close()
+
+
 if __name__ == "__main__":
     emb_dim = 2
-    num_nodes = 101  # should be odd number
+    num_nodes = 1001  # should be odd number
     net = Lorentz(num_nodes, emb_dim + 1)  # as the paper follows R^(n+1) for this space
     r = RSGD(net.parameters(), learning_rate=0.1)
     pairs = insert(num_nodes - (num_nodes + 1) // 2)
@@ -195,29 +219,25 @@ if __name__ == "__main__":
             ):  # sample size of 5, the minimum value of this will depend on num_nodes
                 break
         Ks.append(temp_Ks)
-    print(I)
-    print(Ks)
     I = torch.tensor(I)
     Ks = torch.tensor(Ks)
-    batch_size = 500
-    epoch = 4000
-    for i in range(epoch):
-        loss = 0
-        j = 0
-        while j < len(I):
-            loss_batch, table = net(I[j : j + batch_size], Ks[j : j + batch_size])
-            j += batch_size
-            loss_batch = loss_batch.mean()
-            loss_batch.backward()
-            loss += loss_batch
-            r.step()
-        print(loss)
-        if torch.isnan(loss) or torch.isinf(loss):
-            break
-    table = lorentz_to_poincare(table)
-    fig, ax = plt.subplots()
-    ax.scatter(*zip(*table))
-    for i, crd in enumerate(table):
-        ax.annotate(i, (crd[0], crd[1]))
-    plt.scatter(*zip(*table))
-    plt.show()
+    batch_size = 1000
+    epochs = 40_00_00_000
+    with tqdm(total=epochs) as pbar:
+        for epoch in range(epochs):
+            loss = 0
+            j = 0
+            while j < len(I):
+                loss_batch, table = net(I[j : j + batch_size], Ks[j : j + batch_size])
+                j += batch_size
+                loss_batch = loss_batch.mean()
+                loss_batch.backward()
+                loss += loss_batch
+                r.step()
+            if epoch % 10 == 0:
+                dikhaao(table, loss, epoch)
+            pbar.set_description(f'{epoch}  :   {float(loss)}')
+            pbar.update(1)
+            if torch.isnan(loss) or torch.isinf(loss):
+                print('NAN / Inf')
+                break
