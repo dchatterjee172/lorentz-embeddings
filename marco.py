@@ -168,10 +168,12 @@ def insert(q, d):
     return pairs
 
 
-def dikhaao(table, num_q, loss, epoch):
+def dikhaao(table, num_q, pairs, loss, epoch):
     table = lorentz_to_poincare(table)
     n_nodes = len(table)
     plt.figure(figsize=(10, 7))
+    for p in pairs:
+        plt.plot(*zip((*table[p, :])), linewidth=0.5)
     plt.scatter(*zip(*table[:num_q, :]), label="Q", s=10, cmap="red")
     plt.scatter(*zip(*table[num_q:, :]), label="D", s=10, cmap="blue")
     plt.title(f"{epoch}: N Nodes {n_nodes} Loss {float(loss)}")
@@ -184,7 +186,7 @@ def dikhaao(table, num_q, loss, epoch):
 if __name__ == "__main__":
     emb_dim = 2
     num_q = 100
-    num_d = 40
+    num_d = 30
     net = Lorentz(
         num_q + num_d, emb_dim + 1
     )  # as the paper follows R^(n+1) for this space
@@ -224,8 +226,8 @@ if __name__ == "__main__":
                 loss_batch.backward()
                 loss += loss_batch
                 r.step()
-            if epoch % 10 == 0:
-                dikhaao(table, num_q, loss, epoch)
+            if epoch % 500 == 0:
+                dikhaao(table, num_q, pairs, loss, epoch)
             pbar.set_description(f"{epoch}  :   {float(loss)}")
             pbar.update(1)
             if torch.isnan(loss) or torch.isinf(loss):
