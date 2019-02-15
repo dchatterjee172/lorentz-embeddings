@@ -177,6 +177,8 @@ def dikhaao(table, num_q, pairs, loss, epoch):
         plt.plot(*zip((*table[p, :])), linewidth=0.5)
     plt.scatter(*zip(*table[:num_q, :]), label="Q", s=10, cmap="red")
     plt.scatter(*zip(*table[num_q:, :]), label="D", s=10, cmap="blue")
+    plt.ylim(-1, 1)
+    plt.xlim(-1, 1)
     plt.title(f"{epoch}: N Nodes {n_nodes} Loss {float(loss)}")
     plt.legend()
     images = list(os.listdir("images"))
@@ -186,7 +188,7 @@ def dikhaao(table, num_q, pairs, loss, epoch):
 
 if __name__ == "__main__":
     emb_dim = 2
-    num_q = 20
+    num_q = 5
     num_d = num_q * 17
     net = Lorentz(
         num_q + num_d, emb_dim + 1
@@ -208,7 +210,7 @@ if __name__ == "__main__":
                 # make sure there is not edge between x -> _
                 temp_Ks.append(_)
             if (
-                len(temp_Ks) == 3
+                len(temp_Ks) == num_d // 2
             ):  # sample size of 5, the minimum value of this will depend on num_nodes
                 break
         Ks.append(temp_Ks)

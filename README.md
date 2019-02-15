@@ -17,4 +17,4 @@ Q6
 mkdir images
 python marco.py
 ```
-
+![alt text][final.svg]
