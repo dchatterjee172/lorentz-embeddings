@@ -151,46 +151,29 @@ def N_sample(matrix, i, j, n):
     return ([i + 1 for i in [j] + indices] + [0] * n)[:n]
 
 
-def insert(n):
+def insert(q, d):
     """
-    n    : Number of non-leaf node in the binary tree
-
-    will output a set of pairs of nodes, which will represent the tree,
-    n = 3 will create a tree 1<-0->2 and will become {(1,0), (2,0)}. (child, parent).
-    we assume that the roon node is 0 and after the inserted sequentially.
-    It can only create complete binary tree correctly so n should be odd number.
-    for n = 5,
-        0
-       / \
-      1   2
-     / \
-    3   4
-    output will be {(2, 0), (1, 0), (3, 1), (4, 1)}
+    q   : total Number of questions
+    d   : total Number of documents
+    Will output a directed graph in the format of {(From Node, To Node),...}
+    q nodes will only have outgoing connections
+    d nodes will only have incoming connections.
     """
     pairs = list()
-    for i in range(n):
-        pairs.append((2 * i + 1, i))
-        pairs.append((2 * i + 2, i))
+    q_nodes = np.arange(0, q)
+    d_nodes = np.arange(q, q + d)
+    for i in q_nodes:
+        for j in np.random.permutation(d_nodes)[:10]:
+            pairs.append((j, i))
     return pairs
 
 
-def dikhaao(table, loss, epoch):
+def dikhaao(table, num_q, loss, epoch):
     table = lorentz_to_poincare(table)
-    layers = []
     n_nodes = len(table)
     plt.figure(figsize=(10, 7))
-    plt.rcParams["axes.facecolor"] = "m"
-    while sum([1 for layer in layers for node in layer]) < n_nodes:
-        limit = 2 ** len(layers)
-        layers.append(table[:limit])
-        table = table[limit:]
-        plt.scatter(
-            *zip(*layers[-1]),
-            label=f"Layer {len(layers) - 1}",
-            c=str(len(layers) / np.ceil(np.log(n_nodes) / np.log(2))),
-            s=10,
-            cmap="gray",
-        )
+    plt.scatter(*zip(*table[:num_q, :]), label="Q", s=10, cmap="red")
+    plt.scatter(*zip(*table[num_q:, :]), label="D", s=10, cmap="blue")
     plt.title(f"{epoch}: N Nodes {n_nodes} Loss {float(loss)}")
     plt.legend()
     images = list(os.listdir("images"))
@@ -200,22 +183,20 @@ def dikhaao(table, loss, epoch):
 
 if __name__ == "__main__":
     emb_dim = 2
-    num_nodes = 101  # should be odd number
-    net = Lorentz(num_nodes, emb_dim + 1)  # as the paper follows R^(n+1) for this space
+    num_q = 50
+    num_d = 50
+    net = Lorentz(
+        num_q + num_d, emb_dim + 1
+    )  # as the paper follows R^(n+1) for this space
     r = RSGD(net.parameters(), learning_rate=0.1)
-    pairs = insert(num_nodes - (num_nodes + 1) // 2)
+    pairs = insert(q=num_q, d=num_d)
     np.random.shuffle(pairs)
     pairs = set(pairs)
     print(pairs)
     I = []
     Ks = []
-    arange = np.arange(0, num_nodes)
+    arange = np.arange(num_q, num_q + num_d)
     for x, y in pairs:
-        # we have to parent prediction for binary tree, because if
-        # we have a tree like 1<-0->2 if we do child prediction a conflict arises.
-        # for 0 we have to predict 1, AND 2!! So for I = 0, Ks will have to be
-        # [1, 2] and [2, 1], this creates a conflict. Doing parent prediction is easier
-        # because for I = 1 Ks can be [0, 2]! No conflicts
         I.append(x)
         temp_Ks = [y]  # keep the parent in the begining
         temp = np.random.permutation(arange)
@@ -244,7 +225,7 @@ if __name__ == "__main__":
                 loss += loss_batch
                 r.step()
             if epoch % 10 == 0:
-                dikhaao(table, loss, epoch)
+                dikhaao(table, num_q, loss, epoch)
             pbar.set_description(f"{epoch}  :   {float(loss)}")
             pbar.update(1)
             if torch.isnan(loss) or torch.isinf(loss):
