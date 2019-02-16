@@ -63,9 +63,12 @@ class RSGD(optim.Optimizer):
                     ).unsqueeze(1)
                     * p
                 )
-                grad_norm = torch.norm(p.grad.data, dim=1).unsqueeze(1).repeat(1, D)
                 update = exp_map(p, -group["learning_rate"] * proj)
                 is_nan_inf = torch.isnan(update) | torch.isinf(update)
+                if torch.norm(is_nan_inf.type(torch.FloatTensor)):
+                    print("still nan inf update")
+                if torch.isinf(grad_norm):
+                    print("grad norm inf")
                 update = torch.where(is_nan_inf, p, update)
                 dim0 = torch.sqrt(1 + torch.norm(update[:, 1:], dim=1))
                 update[:, 0] = dim0
@@ -118,10 +121,12 @@ class Lorentz(nn.Module):
         ui = ui.reshape(B * N, D)
         uks = uks.reshape(B * N, D)
         dists = -lorentz_scalar_product(ui, uks)
-        dists = torch.where(dists < 1, torch.ones_like(dists), dists)
+        dists = torch.where(dists <= 1, torch.ones_like(dists) + 1e-6, dists)
         # sometimes 2 embedding can come very close in R^D.
         # when calculating the lorenrz inner product,
         # -1 can become -0.99(no idea!), then arcosh will become nan
+        # epsilon added because otherwise grad will become inf
+        # d arcosh(x)/ d x = inf if x=1
         dists = -arcosh(dists)
         # ---------- turn back to per-sample shape
         dists = dists.reshape(B, N)
@@ -188,7 +193,7 @@ def dikhaao(table, num_q, pairs, loss, epoch):
 
 if __name__ == "__main__":
     emb_dim = 2
-    num_q = 5
+    num_q = 10
     num_d = num_q * 17
     net = Lorentz(
         num_q + num_d, emb_dim + 1
@@ -201,22 +206,21 @@ if __name__ == "__main__":
     I = []
     Ks = []
     arange = np.arange(num_q, num_q + num_d)
-    for x, y in pairs:
-        I.append(x)  # question
-        temp_Ks = [y]  # connected documented
-        temp = np.random.permutation(arange)
-        for _ in temp:
-            if (x, _) not in pairs and _ != x:
-                # make sure there is not edge between x -> _
-                temp_Ks.append(_)
-            if (
-                len(temp_Ks) == num_d // 2
-            ):  # sample size of 5, the minimum value of this will depend on num_nodes
-                break
-        Ks.append(temp_Ks)
+    for i in range(3):
+        for x, y in pairs:
+            I.append(x)  # question
+            temp_Ks = [y]  # connected documented
+            temp = np.random.permutation(arange)
+            for _ in temp:
+                if (x, _) not in pairs:
+                    # make sure there is not edge between x -> _
+                    temp_Ks.append(_)
+                if len(temp_Ks) == num_d // 4:
+                    break
+            Ks.append(temp_Ks)
     I = torch.tensor(I)
     Ks = torch.tensor(Ks)
-    batch_size = 1000
+    batch_size = 100
     epochs = 400_000_000
     with tqdm(total=epochs) as pbar:
         for epoch in range(epochs):
