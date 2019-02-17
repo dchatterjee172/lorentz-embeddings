@@ -47,6 +47,7 @@ class RSGD(optim.Optimizer):
                 gl = torch.eye(D, device=p.device, dtype=p.dtype)
                 gl[0, 0] = -1
                 grad_norm = torch.norm(p.grad.data)
+                grad_norm = torch.where(grad_norm > 1, grad_norm, torch.tensor(1.0))
                 h = (p.grad.data / grad_norm) @ gl
                 proj = (
                     h
