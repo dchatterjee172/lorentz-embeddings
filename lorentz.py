@@ -3,6 +3,7 @@ import random
 import numpy as np
 from torch import nn
 from torch import optim
+
 # import matplotlib.pyplot as plt
 
 
@@ -109,7 +110,7 @@ class Lorentz(nn.Module):
         ui = ui.reshape(B * N, D)
         uks = uks.reshape(B * N, D)
         dists = -lorentz_scalar_product(ui, uks)
-        dists = torch.where(dists < 1, torch.ones_like(dists), dists)
+        dists = torch.where(dists < 1, torch.ones_like(dists) + 1e-6, dists)
         # sometimes 2 embedding can come very close in R^D.
         # when calculating the lorenrz inner product,
         # -1 can become -0.99(no idea!), then arcosh will become nan
@@ -150,6 +151,7 @@ if __name__ == "__main__":
     I = torch.Tensor([1, 2, 3, 4]).long()
     Ks = torch.Tensor([[2, 3, 4, 9], [4, 5, 6, 1], [6, 7, 1, 5], [8, 9, 2, 1]]).long()
     for i in range(4000):
+        r.zero_grad()
         loss, table = net(I, Ks)
         loss = loss.mean()
         loss.backward()
