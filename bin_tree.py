@@ -118,7 +118,7 @@ class Lorentz(nn.Module):
         ui = ui.reshape(B * N, D)
         uks = uks.reshape(B * N, D)
         dists = -lorentz_scalar_product(ui, uks)
-        dists = torch.where(dists < 1, torch.ones_like(dists) + 1e-6, dists)
+        dists = torch.where(dists <= 1, torch.ones_like(dists) + 1e-6, dists)
         # sometimes 2 embedding can come very close in R^D.
         # when calculating the lorenrz inner product,
         # -1 can become -0.99(no idea!), then arcosh will become nan
