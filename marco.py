@@ -69,6 +69,7 @@ class RSGD(optim.Optimizer):
                     print("still nan inf update")
                 if torch.isinf(grad_norm):
                     print("grad norm inf")
+                # print(grad_norm)
                 update = torch.where(is_nan_inf, p, update)
                 dim0 = torch.sqrt(1 + torch.norm(update[:, 1:], dim=1))
                 update[:, 0] = dim0
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     I = []
     Ks = []
     arange = np.arange(num_q, num_q + num_d)
-    for i in range(3):
+    for i in range(5):
         for x, y in pairs:
             I.append(x)  # question
             temp_Ks = [y]  # connected documented
@@ -227,6 +228,7 @@ if __name__ == "__main__":
             loss = 0
             j = 0
             while j < len(I):
+                r.zero_grad()
                 loss_batch, table = net(I[j : j + batch_size], Ks[j : j + batch_size])
                 j += batch_size
                 loss_batch = loss_batch.mean()
