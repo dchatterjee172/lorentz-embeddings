@@ -1,7 +1,7 @@
 import numpy as np
 
 
-depth = 3
+depth = 5
 N = sum(4 ** i for i in range(depth))
 mat = np.zeros((N, N))
 print(mat.shape)
