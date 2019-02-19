@@ -1,2 +1,7 @@
 images/
+logs/
+*.pyc
 *.swp
+runs/
+ckpt/
+embed.svg
