@@ -13,4 +13,3 @@ for i in range(N):
     mat[i, j + 1] = 1
     mat[i, j + 2] = 1
     mat[i, j + 3] = 1
-print(mat)
